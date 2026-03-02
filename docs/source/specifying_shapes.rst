@@ -245,6 +245,11 @@ A dimension constraint with an ``!`` following it will match anything that can b
 For example, if ``i=3`` then ``i!`` will match a dimension of either ``3`` or ``1``.
 Similarly, if ``j=(2, 3)`` then ``*j!`` will match shapes of ``(2, 3)``, ``(2, 1)``, ``(1, 3)``, or ``(1, 1)``.
 
+For variadic broadcast constraints (``*j!``), shapes with fewer dimensions are also accepted,
+following `numpy broadcasting rules <https://numpy.org/doc/stable/user/basics.broadcasting.html>`_
+where missing leading dimensions are treated as 1.
+This means ``*j!`` with ``j=(2, 3)`` will also match ``(3,)`` (equivalent to ``(1, 3)``), ``(1,)``, and ``()`` (a scalar).
+
 .. doctest::
 
     >>> from numpy.random import randn
@@ -267,6 +272,14 @@ Similarly, if ``j=(2, 3)`` then ``*j!`` will match shapes of ``(2, 3)``, ``(2, 1
     ...     (randn(1, 3), "*j!"),
     ...     (randn(2, 1), "*j!"),
     ...     (randn(1, 1), "*j!"),
+    ... )
+    {'j': (2, 3)}
+    >>> import numpy as np
+    >>> check_shapes(
+    ...     (randn(2, 3), "*j"),
+    ...     (randn(3,), "*j!"),
+    ...     (randn(1,), "*j!"),
+    ...     (np.array(1.0), "*j!"),
     ... )
     {'j': (2, 3)}
     >>> check_shapes(

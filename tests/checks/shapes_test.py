@@ -173,6 +173,30 @@ TEST_CASES = [
         out_bindings={"i": (2, 3)},
     ),
     _TestCase(
+        [((2, 3), "*i"), ((1, 1), "*i!"), ((), "*i!")],
+        out_bindings={"i": (2, 3)},
+    ),
+    _TestCase(
+        [((2, 3), "*i"), ((3,), "*i!"), ((), "*i!")],
+        out_bindings={"i": (2, 3)},
+    ),
+    _TestCase(
+        [((2, 3), "*i"), ((5,), "*i!")],
+        error="arg1 dims (0,): expected can broadcast to i=(2, 3) got (5,)",
+    ),
+    _TestCase(
+        [((2, 3), "*i"), ((1, 4), "*i!")],
+        error="arg1 dims (0, 1): expected can broadcast to i=(2, 3) got (1, 4)",
+    ),
+    _TestCase(
+        [((5, 2, 3), "i *j"), ((5,), "i *j!"), ((5, 3), "i *j!"), ((5, 1), "i *j!")],
+        out_bindings={"i": 5, "j": (2, 3)},
+    ),
+    _TestCase(
+        [((5, 2, 3), "i *j"), ((5, 5), "i *j!")],
+        error="arg1 dims (1,): expected can broadcast to j=(2, 3) got (5,)",
+    ),
+    _TestCase(
         [((2, 4), "i (j+1)!"), ((2, 1), "i (j+1)!")],
         in_bindings={"j": 3},
         out_bindings={"i": 2, "j": 3},
