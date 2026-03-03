@@ -10,6 +10,16 @@ from eincheck.types import ShapeVariable, Tensor
 from eincheck.utils import get_shape
 
 
+def _is_broadcast_compatible(got: Tuple[int, ...], expected: Tuple[int, ...]) -> bool:
+    """Check if got is broadcast-compatible with expected (numpy-style).
+
+    A shorter got is allowed: missing leading dims are implicitly 1.
+    """
+    if len(got) > len(expected):
+        return False
+    return all(g == e or g == 1 for g, e in zip(reversed(got), reversed(expected)))
+
+
 def _check_dim_spec(
     got_shape: Tuple[int, ...],
     d: DimSpec,
@@ -44,9 +54,18 @@ def _check_dim_spec(
         )
 
     def do_check(g: ShapeVariable, indices: ShapeVariable) -> None:
-        if d.can_broadcast and g not in broadcast_values:
-            first_line = f"expected can broadcast to {d.value}={expected_value} got {g}"
-        elif not d.can_broadcast and g != expected_value:
+        if d.can_broadcast:
+            if isinstance(g, tuple) and isinstance(expected_value, tuple):
+                is_ok = _is_broadcast_compatible(g, expected_value)
+            else:
+                is_ok = g in broadcast_values
+            if not is_ok:
+                first_line = (
+                    f"expected can broadcast to {d.value}={expected_value} got {g}"
+                )
+            else:
+                first_line = None
+        elif g != expected_value:
             first_line = f"expected {d.value}={expected_value} got {g}"
         else:
             first_line = None
