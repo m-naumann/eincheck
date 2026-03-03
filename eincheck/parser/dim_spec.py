@@ -105,6 +105,8 @@ class DimSpec:
             return 1
         if self.type is DimType.REPEATED:
             return None
+        if self.can_broadcast:
+            return None
 
         if self.value is not None and self.is_defined(bindings):
             got = self.value.eval(bindings)
