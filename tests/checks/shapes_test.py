@@ -3,7 +3,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 import pytest
 
-from eincheck.checks.shapes import check_shapes
+from eincheck.checks.shapes import _is_broadcast_compatible, check_shapes
 from eincheck.parser.dim_spec import DimSpec
 from eincheck.parser.grammar import ShapeArg
 from eincheck.types import ShapeVariable
@@ -197,6 +197,10 @@ TEST_CASES = [
         error="arg1 dims (1,): expected can broadcast to j=(2, 3) got (5,)",
     ),
     _TestCase(
+        [((3,), "*j"), ((1, 3), "*j!")],
+        error="arg1 dims (0, 1): expected can broadcast to j=(3,) got (1, 3)",
+    ),
+    _TestCase(
         [((2, 4), "i (j+1)!"), ((2, 1), "i (j+1)!")],
         in_bindings={"j": 3},
         out_bindings={"i": 2, "j": 3},
@@ -213,6 +217,17 @@ TEST_CASES = [
     _TestCase([((), ".")]),
     _TestCase([((3,), ".")], error="arg0: expected rank 0, got shape (3,)"),
 ]
+
+
+def test_is_broadcast_compatible() -> None:
+    assert _is_broadcast_compatible((), (2, 3))
+    assert _is_broadcast_compatible((3,), (2, 3))
+    assert _is_broadcast_compatible((1,), (2, 3))
+    assert _is_broadcast_compatible((2, 3), (2, 3))
+    assert _is_broadcast_compatible((1, 1), (2, 3))
+    assert not _is_broadcast_compatible((5,), (2, 3))
+    assert not _is_broadcast_compatible((1, 4), (2, 3))
+    assert not _is_broadcast_compatible((1, 2, 3), (2, 3))
 
 
 @pytest.mark.parametrize("case", TEST_CASES)
